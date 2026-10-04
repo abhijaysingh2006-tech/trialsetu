@@ -56,7 +56,7 @@ function LeadershipDash() {
   const participants = useStore((s) => s.participants);
   const aes = useStore((s) => s.aes);
   const batches = useStore((s) => s.batches);
-  const { clocks } = useClocks(1000);
+  const { clocks } = useClocks(5000);
 
   const active = studies.filter((s) => ['Recruiting', 'Active, not recruiting', 'Suspended'].includes(s.status));
   const siteSet = new Set(active.flatMap((s) => s.sites.map((x) => x.siteId)));
@@ -86,6 +86,20 @@ function LeadershipDash() {
     xAxis: { type: 'value' as const, name: 'AE / 100 exposed' }, yAxis: { type: 'category' as const, data: batches.map((b) => b.batchNo) },
     series: [{ type: 'bar' as const, data: signals.map((s) => ({ value: s.ratePer100, itemStyle: { color: s.signal ? '#c2410c' : '#4bb39c', borderRadius: [0, 4, 4, 0] } })), barMaxWidth: 18 }],
   }), [signals, batches]);
+
+  const clockMixOpt = useMemo(() => ({
+    tooltip: { trigger: 'item' as const },
+    series: [{
+      type: 'pie' as const,
+      radius: ['45%', '72%'],
+      label: { fontSize: 11 },
+      data: (['green', 'amber', 'red', 'overdue', 'met'] as const).map((s) => ({
+        name: s,
+        value: clocks.filter((c) => c.status === s).length,
+        itemStyle: { color: { green: '#10b981', amber: '#f59e0b', red: '#ef4444', overdue: '#991b1b', met: '#94a3b8' }[s] },
+      })),
+    }],
+  }), [clocks]);
 
   return (
     <div>
@@ -117,7 +131,7 @@ function LeadershipDash() {
         <Card title="Portfolio cumulative enrolment"><EChart option={trendOpt} height={220} /></Card>
         <Card title="AE rate by formulation batch" actions={<Link href="/batches" className="text-xs text-brand-700 hover:underline">Signals →</Link>}><EChart option={batchOpt} height={220} /></Card>
         <Card title="Clock status mix">
-          <EChart height={220} option={{ tooltip: { trigger: 'item' }, series: [{ type: 'pie', radius: ['45%', '72%'], label: { fontSize: 11 }, data: (['green', 'amber', 'red', 'overdue', 'met'] as const).map((s) => ({ name: s, value: clocks.filter((c) => c.status === s).length, itemStyle: { color: { green: '#10b981', amber: '#f59e0b', red: '#ef4444', overdue: '#991b1b', met: '#94a3b8' }[s] } })) }] }} />
+          <EChart height={220} option={clockMixOpt} />
         </Card>
       </div>
 
@@ -154,7 +168,7 @@ function InvestigatorDash() {
   const visits = useStore((s) => s.visits);
   const deviations = useStore((s) => s.deviations);
   const aes = useStore((s) => s.aes);
-  const { clocks, now } = useClocks(1000);
+  const { clocks, now } = useClocks(5000);
   const ids = new Set(studies.map((s) => s.id));
   const myClocks = clocks.filter((c) => ids.has(c.studyId) && c.appliesTo === 'SAE' && !c.stoppedAt && c.ruleId === 'SAE-24H');
   const upcoming = visits.filter((v) => ids.has(v.studyId) && v.status === 'Scheduled' && Date.parse(v.scheduled) < now + 14 * 86400000).sort((a, b) => a.scheduled.localeCompare(b.scheduled));
@@ -227,7 +241,7 @@ function DeviationModal({ open, onClose, studyIds }: { open: boolean; onClose: (
 function EthicsDash() {
   const studies = useStore((s) => s.studies);
   const participants = useStore((s) => s.participants);
-  const { clocks } = useClocks(1000);
+  const { clocks } = useClocks(5000);
   const renewals = clocks.filter((c) => c.ruleId === 'EC-RENEWAL').sort((a, b) => a.dueAt - b.dueAt);
   const opinions = clocks.filter((c) => c.ruleId === 'SAE-EC-30D' && !c.stoppedAt);
   const pending = studies.filter((s) => s.ecRenewalStatus === 'Pending initial');
@@ -265,7 +279,7 @@ function EthicsDash() {
 function PvDash() {
   const aes = useStore((s) => s.aes);
   const batches = useStore((s) => s.batches);
-  const { clocks } = useClocks(1000);
+  const { clocks } = useClocks(5000);
   const open24 = clocks.filter((c) => c.ruleId === 'SAE-24H' && !c.stoppedAt).sort((a, b) => a.remainingMs - b.remainingMs);
   const open14 = clocks.filter((c) => c.ruleId === 'SAE-14D' && !c.stoppedAt);
   const queue = aes.filter((a) => a.codingStatus !== 'Coded');

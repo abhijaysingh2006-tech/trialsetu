@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   LayoutDashboard, FlaskConical, Siren, Boxes, Languages, TabletSmartphone, Sparkles, Stamp, ShieldCheck, ScrollText,
   Share2, SlidersHorizontal, Gauge, Network, Wifi, WifiOff, Bell, RotateCcw, PlayCircle, ShieldAlert, LogOut, Leaf,
@@ -90,8 +90,8 @@ function Frame({ children }: { children: ReactNode }) {
   const setTour = useStore((s) => s.setTour);
   const queue = useStore((s) => s.syncQueue.length);
   const online = useOnline();
-  const { clocks } = useClocks(5000);
-  const hot = clocks.filter((c) => c.status === 'red' || c.status === 'overdue').length;
+  const { clocks } = useClocks(30000);
+  const hot = useMemo(() => clocks.filter((c) => c.status === 'red' || c.status === 'overdue').length, [clocks]);
   const allowed = canRoute(role, pathname);
   const lastLogged = useRef('');
 
@@ -100,8 +100,8 @@ function Frame({ children }: { children: ReactNode }) {
     const key = `${role}|${pathname}`;
     if (lastLogged.current === key) return;
     lastLogged.current = key;
-    log({ action: allowed ? 'ACCESS' : 'ACCESS_DENIED', entity: 'route', entityId: pathname, detail: `${allowed ? 'Allowed' : 'Denied'} by RBAC policy for role "${role}"` });
-  }, [pathname, role, allowed, log]);
+    useStore.getState().log({ action: allowed ? 'ACCESS' : 'ACCESS_DENIED', entity: 'route', entityId: pathname, detail: `${allowed ? 'Allowed' : 'Denied'} by RBAC policy for role "${role}"` });
+  }, [pathname, role, allowed]);
 
   const me = users.find((u) => u.role === role);
 

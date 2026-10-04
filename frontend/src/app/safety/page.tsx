@@ -32,7 +32,7 @@ export default function SafetyPage() {
   const addAE = useStore((s) => s.addAE);
   const canAdd = useCan('ae:create');
 
-  const { clocks } = useClocks(1000);
+  const { clocks } = useClocks(5000);
 
   const [tab, setTab] = useState<'clocks' | 'all-aes' | 'saes'>('clocks');
   const [filterQuery, setFilterQuery] = useState('');

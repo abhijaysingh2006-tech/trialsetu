@@ -106,9 +106,21 @@ export const useStore = create<State>()(
       tourStep: null,
 
       async init() {
-        if (get().studies.length) { set({ ready: true }); return; }
+        const s = get();
+        if (s.studies.length && s.participants.length) { set({ ready: true }); return; }
         const seed = await dataSource.loadSeed(Date.now());
-        set({ ...seed, audit: seedAudit(seed), signatures: [], aiDecisions: {}, rules: DEFAULT_RULES, syncQueue: [], ready: true });
+        if (!s.studies.length) {
+          set({ ...seed, audit: seedAudit(seed), signatures: [], aiDecisions: {}, rules: DEFAULT_RULES, syncQueue: [], ready: true });
+        } else {
+          set({
+            participants: s.participants.length ? s.participants : seed.participants,
+            sites: s.sites.length ? s.sites : seed.sites,
+            formulations: s.formulations.length ? s.formulations : seed.formulations,
+            visits: s.visits.length ? s.visits : seed.visits,
+            users: s.users.length ? s.users : seed.users,
+            ready: true,
+          });
+        }
       },
       async resetDemo() {
         const seed = await dataSource.loadSeed(Date.now());
@@ -261,12 +273,46 @@ export const useStore = create<State>()(
     }),
     {
       name: 'trialsetu-v1',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (s) => {
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        const { ready, tourStep, ...rest } = s;
-        return Object.fromEntries(Object.entries(rest).filter(([, v]) => typeof v !== 'function')) as Partial<State>;
-      },
+      storage: createJSONStorage(() => {
+        let saveTimer: ReturnType<typeof setTimeout> | null = null;
+        return {
+          getItem: (key: string) => {
+            if (typeof window === 'undefined') return null;
+            return window.localStorage.getItem(key);
+          },
+          setItem: (key: string, value: string) => {
+            if (typeof window === 'undefined') return;
+            if (saveTimer) clearTimeout(saveTimer);
+            saveTimer = setTimeout(() => {
+              try {
+                window.localStorage.setItem(key, value);
+              } catch (err) {
+                console.warn('Storage write failed', err);
+              }
+            }, 250);
+          },
+          removeItem: (key: string) => {
+            if (typeof window === 'undefined') return;
+            window.localStorage.removeItem(key);
+          },
+        };
+      }),
+      partialize: (s) => ({
+        role: s.role,
+        lang: s.lang,
+        authed: s.authed,
+        rules: s.rules,
+        signatures: s.signatures,
+        aiDecisions: s.aiDecisions,
+        syncQueue: s.syncQueue,
+        simulateOffline: s.simulateOffline,
+        tamperBackup: s.tamperBackup,
+        studies: s.studies,
+        aes: s.aes,
+        batches: s.batches,
+        deviations: s.deviations,
+        audit: s.audit,
+      }),
     },
   ),
 );

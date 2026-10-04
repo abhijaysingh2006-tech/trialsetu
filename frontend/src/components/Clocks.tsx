@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { ArrowRight, Boxes, Check, PenLine, Send, Timer } from 'lucide-react';
 import { fmtDuration, type Clock } from '@/lib/rules';
 import { useStore } from '@/lib/store';
@@ -9,7 +9,7 @@ import { useCan } from '@/lib/hooks';
 import type { ESignature } from '@/lib/types';
 import { ClockPill, Modal, fmtDT } from './ui';
 
-export function EscalationLadder({ clock }: { clock: Clock }) {
+export const EscalationLadder = memo(function EscalationLadder({ clock }: { clock: Clock }) {
   return (
     <ol className="flex flex-wrap items-center gap-1 text-[11px]">
       {clock.ladder.map((s, i) => {
@@ -26,9 +26,9 @@ export function EscalationLadder({ clock }: { clock: Clock }) {
       })}
     </ol>
   );
-}
+});
 
-export function ClockBar({ clock }: { clock: Clock }) {
+export const ClockBar = memo(function ClockBar({ clock }: { clock: Clock }) {
   const pct = Math.min(100, clock.pctElapsed * 100);
   const c = clock.stoppedAt ? 'bg-slate-400' : clock.status === 'green' ? 'bg-emerald-500' : clock.status === 'amber' ? 'bg-amber-500' : 'bg-red-600';
   return (
@@ -37,10 +37,10 @@ export function ClockBar({ clock }: { clock: Clock }) {
       {clock.ladder.map((s, i) => <span key={i} className="absolute top-0 h-full w-px bg-white/80" style={{ left: `${s.atPctElapsed * 100}%` }} />)}
     </div>
   );
-}
+});
 
 /** Large SAE countdown card with escalation ladder and the statutory action. */
-export function SaeClockCard({ clock, highlight }: { clock: Clock; highlight?: boolean }) {
+export const SaeClockCard = memo(function SaeClockCard({ clock, highlight }: { clock: Clock; highlight?: boolean }) {
   const ae = useStore((s) => s.aes.find((a) => a.id === clock.entityId));
   const batch = useStore((s) => s.batches.find((b) => b.id === ae?.batchId));
   const study = useStore((s) => s.studies.find((x) => x.id === clock.studyId));
@@ -94,7 +94,7 @@ export function SaeClockCard({ clock, highlight }: { clock: Clock; highlight?: b
         onSigned={() => reportSAE(ae.id, which)} />
     </div>
   );
-}
+});
 
 /** 21 CFR Part 11-style e-signature: re-authentication + meaning + timestamp, bound to an audit entry. */
 export function ESignDialog({ open, onClose, entity, entityId, title, onSigned, defaultMeaning = 'Approved' }: {
