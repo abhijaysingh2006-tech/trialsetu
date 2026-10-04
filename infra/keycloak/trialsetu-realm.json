@@ -1,0 +1,130 @@
+{
+  "id": "trialsetu",
+  "realm": "trialsetu",
+  "displayName": "TrialSetu AIIA SSO",
+  "enabled": true,
+  "sslRequired": "external",
+  "registrationAllowed": false,
+  "loginWithEmailAllowed": true,
+  "duplicateEmailsAllowed": false,
+  "resetPasswordAllowed": true,
+  "editUsernameAllowed": false,
+  "bruteForceProtected": true,
+  "permanentLockout": false,
+  "maxFailureWaitSeconds": 900,
+  "minimumQuickLoginWaitSeconds": 60,
+  "waitIncrementSeconds": 60,
+  "quickLoginCheckMilliSeconds": 1000,
+  "maxDeltaTimeSeconds": 43200,
+  "failureFactor": 5,
+  "roles": {
+    "realm": [
+      {
+        "name": "investigator",
+        "description": "Trial site investigator"
+      },
+      {
+        "name": "ethics",
+        "description": "Institutional Ethics Committee member"
+      },
+      {
+        "name": "pv",
+        "description": "Pharmacovigilance officer (AIIA PV Cell / NPvCC)"
+      },
+      {
+        "name": "leadership",
+        "description": "Read-only leadership and regulatory desk"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "trialsetu-web",
+      "name": "TrialSetu Web Client",
+      "enabled": true,
+      "publicClient": true,
+      "protocol": "openid-connect",
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://127.0.0.1:3000/*"
+      ],
+      "webOrigins": [
+        "http://localhost:3000",
+        "http://127.0.0.1:3000"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ],
+  "users": [
+    {
+      "username": "u-inv-01",
+      "enabled": true,
+      "email": "meera.iyer@aiia.gov.in",
+      "firstName": "Meera",
+      "lastName": "Iyer",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["investigator"],
+      "requiredActions": ["CONFIGURE_TOTP"]
+    },
+    {
+      "username": "u-ec-01",
+      "enabled": true,
+      "email": "rk.sharma@aiia.gov.in",
+      "firstName": "R. K.",
+      "lastName": "Sharma",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["ethics"],
+      "requiredActions": ["CONFIGURE_TOTP"]
+    },
+    {
+      "username": "u-pv-01",
+      "enabled": true,
+      "email": "anjali.verma@aiia.gov.in",
+      "firstName": "Anjali",
+      "lastName": "Verma",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["pv"],
+      "requiredActions": ["CONFIGURE_TOTP"]
+    },
+    {
+      "username": "u-ld-01",
+      "enabled": true,
+      "email": "dean.research@aiia.gov.in",
+      "firstName": "S.",
+      "lastName": "Rao",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "demo",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["leadership"],
+      "requiredActions": ["CONFIGURE_TOTP"]
+    }
+  ]
+}

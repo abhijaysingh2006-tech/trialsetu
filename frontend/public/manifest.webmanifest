@@ -1,0 +1,17 @@
+{
+  "name": "TrialSetu - Ayurveda CTMS & PV",
+  "short_name": "TrialSetu",
+  "description": "Role-based, auditable Clinical Trial Management System and Pharmacovigilance for Ayurveda/ASU studies",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6faf9",
+  "theme_color": "#1d7a69",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

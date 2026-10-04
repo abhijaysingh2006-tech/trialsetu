@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root { color-scheme: light; }
+html, body { background: #f6faf9; color: #0f2b27; }
+body { font-feature-settings: 'cv11', 'ss01'; }
+
+@layer components {
+  .card { @apply rounded-xl border border-slate-200/80 bg-white shadow-card; }
+  .card-h { @apply flex items-center justify-between gap-3 border-b border-slate-100 px-4 py-3; }
+  .card-t { @apply text-sm font-semibold text-slate-800; }
+  .btn { @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition disabled:cursor-not-allowed disabled:opacity-50; }
+  .btn-primary { @apply btn bg-brand-600 text-white hover:bg-brand-700; }
+  .btn-ghost { @apply btn border border-slate-200 bg-white text-slate-700 hover:bg-slate-50; }
+  .btn-danger { @apply btn bg-red-600 text-white hover:bg-red-700; }
+  .btn-haldi { @apply btn bg-haldi-500 text-white hover:bg-haldi-600; }
+  .input { @apply w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none focus:border-brand-500 focus:ring-2 focus:ring-brand-100; }
+  .label { @apply mb-1 block text-xs font-medium text-slate-600; }
+  .pill { @apply inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ring-inset; }
+  .tbl { @apply w-full text-sm; }
+  .tbl th { @apply border-b border-slate-200 bg-slate-50/70 px-3 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500; }
+  .tbl td { @apply border-b border-slate-100 px-3 py-2 align-top; }
+  .tbl tr:hover td { @apply bg-brand-50/40; }
+  .mono { @apply font-mono text-xs; }
+}
+
+/* subtle Ayurveda motif (lotus-dot pattern) for hero areas */
+.motif {
+  background-image: radial-gradient(circle at 1px 1px, rgba(29, 122, 105, 0.12) 1px, transparent 0);
+  background-size: 18px 18px;
+}
+
+@keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(220, 38, 38, .45); } 70% { box-shadow: 0 0 0 10px rgba(220, 38, 38, 0); } 100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0); } }
+.pulse-red { animation: pulse-ring 1.6s infinite; }
+@keyframes tour-glow { 0%,100% { box-shadow: 0 0 0 3px rgba(230,154,20,.55); } 50% { box-shadow: 0 0 0 6px rgba(230,154,20,.2); } }
+.tour-target { animation: tour-glow 1.4s infinite; border-radius: 12px; }

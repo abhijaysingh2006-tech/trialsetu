@@ -1,0 +1,83 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: trialsetu-web
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_DATA_SOURCE=http
+      - NEXT_PUBLIC_API_URL=http://localhost:8000
+    depends_on:
+      - backend
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trialsetu-api
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://trialsetu:trialsetu123@postgres:5432/trialsetu
+      - REDIS_URL=redis://redis:6379/0
+      - DEMO_MODE=true
+    depends_on:
+      - postgres
+      - redis
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: trialsetu-worker
+    command: python -m app.worker
+    environment:
+      - DATABASE_URL=postgresql://trialsetu:trialsetu123@postgres:5432/trialsetu
+      - REDIS_URL=redis://redis:6379/0
+    depends_on:
+      - backend
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: trialsetu-db
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=trialsetu
+      - POSTGRES_PASSWORD=trialsetu123
+      - POSTGRES_DB=trialsetu
+    volumes:
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: trialsetu-redis
+    ports:
+      - "6379:6379"
+
+  hapi:
+    image: hapiproject/hapi:latest
+    container_name: trialsetu-fhir
+    ports:
+      - "8080:8080"
+    environment:
+      - hapi.fhir.fhir_version=R4
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: trialsetu-sso
+    command: start-dev --import-realm
+    ports:
+      - "8081:8080"
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+    volumes:
+      - ./infra/keycloak/trialsetu-realm.json:/opt/keycloak/data/import/trialsetu-realm.json:ro
+
+volumes:
+  pgdata:
