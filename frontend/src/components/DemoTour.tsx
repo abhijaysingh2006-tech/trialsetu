@@ -1,73 +1,240 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useCallback } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronLeft, ChevronRight, X, PlayCircle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, PlayCircle, Compass } from 'lucide-react';
 import { useStore } from '@/lib/store';
 import type { RoleId } from '@/lib/types';
 
-interface Step { title: string; text: string; role: RoleId; href: (saeId: string) => string; target?: string }
+export interface Step {
+  title: string;
+  text: string;
+  role: RoleId;
+  href: (saeId: string) => string;
+  target?: string;
+}
 
-const STEPS: Step[] = [
-  { title: 'Leadership portfolio', role: 'leadership', href: () => '/', target: 'tour-kpis', text: 'Real-time, read-only view of 12 synthetic AIIA trials. KPI targets (100% SAEs on clock, zero unaudited changes, FHIR/SDTM pass, role-scoped access logged) are computed live from the data — not hard-coded.' },
-  { title: 'Drill into a study', role: 'leadership', href: () => '/studies/T10', target: 'tour-study', text: 'Kaishore Guggulu in Knee OA (Sandhigata Vata): phase, CTRI number, EC approval dates, enrolment vs target per site, and its open statutory clocks.' },
-  { title: 'SAE nearing its 24-hour clock', role: 'pv', href: (id) => `/safety?focus=${id}`, target: 'tour-sae', text: 'Switched to the PV Officer. This SAE is red with a live countdown to the NDCT 2019 24-hour reporting deadline; the escalation ladder shows who is notified next (Investigator → PV → PI → Leadership).' },
-  { title: 'Trace to formulation batch', role: 'pv', href: () => '/batches/B-KSG-2606', target: 'tour-batch', text: 'Every AE links back to its ASU formulation batch. Batch KSG/26/06 shows a hepatic AE cluster — the disproportionality (PRR/χ²) signal fires with an explain-why line. The PV officer can quarantine the batch (audited).' },
-  { title: 'NAMASTE → MedDRA coding', role: 'pv', href: (id) => `/coding?ae=${id}`, target: 'tour-coding', text: "The investigator recorded 'Kamala (Pittaja)'. The terminology bridge proposes MedDRA PTs with confidence and rationale; the coder accepts, edits or rejects — human-in-the-loop, logged." },
-  { title: 'Audit-trail verification', role: 'leadership', href: () => '/audit', target: 'tour-audit', text: 'Every change, view and signature is a SHA-256 hash-chained, append-only entry. Click “Verify chain”, then try “Simulate tampering” to see the break detected at the exact entry.' },
-  { title: 'Export the CTRI packet', role: 'investigator', href: () => '/interop?tab=packets&study=T10', target: 'tour-packet', text: 'As the PI, generate the CTRI update packet for T10 — hashed, e-signable and downloadable as HTML/JSON. SDTM/ADaM/Define-XML and FHIR R4 bundles are on the neighbouring tabs.' },
+export const STEPS: Step[] = [
+  {
+    title: '1. Leadership Portfolio',
+    role: 'leadership',
+    href: () => '/',
+    target: 'tour-kpis',
+    text: 'Real-time, read-only view of 12 synthetic AIIA trials. Live KPI scorecard (100% SAEs on clocks, zero unaudited changes, FHIR/SDTM pass, role-scoped access) calculated live from the data.',
+  },
+  {
+    title: '2. Drill into a Study',
+    role: 'leadership',
+    href: () => '/studies/T10',
+    target: 'tour-study',
+    text: 'Kaishore Guggulu in Knee OA (Sandhigata Vata): phase, CTRI number, EC approval dates, enrolment vs target per site, and open statutory countdown clocks.',
+  },
+  {
+    title: '3. SAE Nearing 24h Clock',
+    role: 'pv',
+    href: (id) => `/safety?focus=${id}`,
+    target: 'tour-sae',
+    text: 'Switched to Pharmacovigilance Officer. This SAE is in red with live countdown to the NDCT 2019 24-hour statutory reporting deadline. The 4-tier escalation ladder notifies Investigator → PV → PI → Leadership.',
+  },
+  {
+    title: '4. Trace to Formulation Batch',
+    role: 'pv',
+    href: () => '/batches/B-KSG-2606',
+    target: 'tour-batch',
+    text: 'Every AE links back to its ASU formulation batch. Batch KSG/26/06 shows a hepatic cluster with disproportionality signal (PRR ≥ 2.0, χ² ≥ 4.0). The PV officer can quarantine the batch with an audited reason.',
+  },
+  {
+    title: '5. NAMASTE → MedDRA Coding',
+    role: 'pv',
+    href: (id) => `/coding?ae=${id}`,
+    target: 'tour-coding',
+    text: "The investigator entered 'Kamala (Pittaja)'. The terminology bridge proposes MedDRA PTs with confidence and rationale; the coder accepts, edits or rejects (human-in-the-loop, audited).",
+  },
+  {
+    title: '6. Cryptographic Audit Verification',
+    role: 'leadership',
+    href: () => '/audit',
+    target: 'tour-audit',
+    text: 'Every change, route view and 21 CFR Part 11 e-signature is a SHA-256 hash-chained, append-only entry. Click “Verify chain” or “Simulate tampering” to see broken tamper detection.',
+  },
+  {
+    title: '7. Export CTRI & FHIR Packets',
+    role: 'investigator',
+    href: () => '/interop?tab=packets&study=T10',
+    target: 'tour-packet',
+    text: 'As PI, generate the CTRI update packet for T10 — hashed, e-signable and downloadable as HTML/JSON. SDTM/ADaM/Define-XML and HAPI FHIR R4 bundles are available in the adjacent tabs.',
+  },
 ];
 
 export function DemoTour() {
   const step = useStore((s) => s.tourStep);
   const setTour = useStore((s) => s.setTour);
   const setRole = useStore((s) => s.setRole);
-  const aes = useStore((s) => s.aes);
   const router = useRouter();
   const pathname = usePathname();
-  const sae = aes.find((a) => a.serious && a.batchId === 'B-KSG-2606' && !a.reportedAt) ?? aes.find((a) => a.serious && !a.reportedAt) ?? aes.find((a) => a.serious);
 
+  const getSaeId = useCallback(() => {
+    const aes = useStore.getState().aes;
+    const sae =
+      aes.find((a) => a.serious && a.batchId === 'B-KSG-2606') ??
+      aes.find((a) => a.serious && !a.reportedAt) ??
+      aes.find((a) => a.serious) ??
+      aes[0];
+    return sae?.id ?? 'AE-0001';
+  }, []);
+
+  const goToStep = useCallback(
+    (newStep: number | null) => {
+      if (newStep === null) {
+        setTour(null);
+        document.querySelectorAll('.tour-target').forEach((e) => e.classList.remove('tour-target'));
+        return;
+      }
+      const clamped = Math.max(0, Math.min(newStep, STEPS.length - 1));
+      const s = STEPS[clamped];
+      const saeId = getSaeId();
+      const targetHref = s.href(saeId);
+
+      setRole(s.role);
+      setTour(clamped);
+      router.push(targetHref);
+    },
+    [getSaeId, router, setRole, setTour]
+  );
+
+  // Sync route and role when step changes
   useEffect(() => {
     if (step === null) return;
     const s = STEPS[step];
-    setRole(s.role);
-    router.push(s.href(sae?.id ?? ''));
-  }, [step]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (useStore.getState().role !== s.role) {
+      setRole(s.role);
+    }
+  }, [step, setRole]);
 
+  // Robust element highlighter with retry polling
   useEffect(() => {
     if (step === null) return;
-    const id = STEPS[step].target;
-    if (!id) return;
-    let el: HTMLElement | null = null;
-    const t = setTimeout(() => {
-      el = document.getElementById(id);
-      if (el) { el.classList.add('tour-target'); el.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
-    }, 450);
-    return () => { clearTimeout(t); el?.classList.remove('tour-target'); };
+    const targetId = STEPS[step].target;
+    if (!targetId) return;
+
+    let attempts = 0;
+    const timer = setInterval(() => {
+      attempts++;
+      const el = document.getElementById(targetId);
+      if (el) {
+        clearInterval(timer);
+        document.querySelectorAll('.tour-target').forEach((e) => e.classList.remove('tour-target'));
+        el.classList.add('tour-target');
+        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      } else if (attempts >= 30) {
+        clearInterval(timer);
+      }
+    }, 100);
+
+    return () => {
+      clearInterval(timer);
+      const el = document.getElementById(targetId);
+      el?.classList.remove('tour-target');
+    };
   }, [step, pathname]);
+
+  // Keyboard navigation shortcuts
+  useEffect(() => {
+    if (step === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
+      if (e.key === 'ArrowRight' || e.key === 'Enter') {
+        if (step < STEPS.length - 1) goToStep(step + 1);
+        else goToStep(null);
+      } else if (e.key === 'ArrowLeft') {
+        if (step > 0) goToStep(step - 1);
+      } else if (e.key === 'Escape') {
+        goToStep(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [step, goToStep]);
 
   if (step === null) return null;
   const s = STEPS[step];
+
   return (
-    <div className="fixed bottom-4 right-4 z-40 w-[380px] max-w-[calc(100vw-2rem)] rounded-xl border border-haldi-400/50 bg-white shadow-2xl">
-      <div className="flex items-center justify-between rounded-t-xl bg-gradient-to-r from-brand-700 to-brand-600 px-4 py-2 text-white">
-        <div className="flex items-center gap-2 text-sm font-medium"><PlayCircle size={16} /> Demo · step {step + 1}/{STEPS.length}</div>
-        <button onClick={() => setTour(null)} aria-label="Close tour"><X size={16} /></button>
+    <div className="fixed bottom-5 right-5 z-50 w-[420px] max-w-[calc(100vw-2.5rem)] rounded-2xl border-2 border-haldi-400 bg-white shadow-2xl transition-all animate-in fade-in slide-in-from-bottom-4">
+      {/* Header */}
+      <div className="flex items-center justify-between rounded-t-xl bg-gradient-to-r from-brand-800 to-brand-700 px-4 py-3 text-white shadow-sm">
+        <div className="flex items-center gap-2 text-sm font-semibold tracking-wide">
+          <PlayCircle size={18} className="text-haldi-400 animate-pulse" />
+          <span>Demo Tour · Step {step + 1} of {STEPS.length}</span>
+        </div>
+        <button
+          onClick={() => goToStep(null)}
+          className="rounded-lg p-1 text-brand-200 transition hover:bg-white/10 hover:text-white"
+          aria-label="Close tour"
+          title="Close tour (Esc)"
+        >
+          <X size={18} />
+        </button>
       </div>
-      <div className="p-4">
-        <div className="mb-1 font-semibold text-brand-900">{s.title}</div>
-        <p className="text-sm leading-relaxed text-slate-600">{s.text}</p>
-        <div className="mt-2 text-[11px] text-slate-400">Acting as: <b>{s.role}</b></div>
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex gap-1">{STEPS.map((_, i) => <span key={i} className={`h-1.5 w-5 rounded-full ${i <= step ? 'bg-haldi-500' : 'bg-slate-200'}`} />)}</div>
-          <div className="flex gap-2">
-            <button disabled={step === 0} onClick={() => setTour(step - 1)} className="btn-ghost px-2"><ChevronLeft size={14} /></button>
-            {step < STEPS.length - 1
-              ? <button onClick={() => setTour(step + 1)} className="btn-primary">Next <ChevronRight size={14} /></button>
-              : <button onClick={() => setTour(null)} className="btn-primary">Finish</button>}
+
+      {/* Content */}
+      <div className="p-5">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-bold text-base text-brand-950">{s.title}</h3>
+          <span className="pill bg-brand-50 text-brand-800 ring-brand-200 font-mono text-[10px]">
+            {s.role.toUpperCase()}
+          </span>
+        </div>
+        <p className="mt-2 text-xs leading-relaxed text-slate-600 font-normal">{s.text}</p>
+
+        {/* Step dots (Direct jump) */}
+        <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+          <div className="flex gap-1.5" title="Click any dot to jump to that step">
+            {STEPS.map((st, i) => (
+              <button
+                key={i}
+                onClick={() => goToStep(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === step
+                    ? 'w-6 bg-haldi-500 shadow-sm'
+                    : i < step
+                    ? 'w-2 bg-brand-600 hover:bg-brand-700'
+                    : 'w-2 bg-slate-200 hover:bg-slate-300'
+                }`}
+                title={`Step ${i + 1}: ${st.title}`}
+              />
+            ))}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              disabled={step === 0}
+              onClick={() => goToStep(step - 1)}
+              className="btn-ghost text-xs px-2.5 py-1 disabled:opacity-30"
+              title="Previous step (Left Arrow)"
+            >
+              <ChevronLeft size={14} /> Back
+            </button>
+            {step < STEPS.length - 1 ? (
+              <button
+                onClick={() => goToStep(step + 1)}
+                className="btn-primary text-xs px-3.5 py-1 shadow-sm"
+                title="Next step (Right Arrow or Enter)"
+              >
+                Next <ChevronRight size={14} />
+              </button>
+            ) : (
+              <button
+                onClick={() => goToStep(null)}
+                className="btn-primary text-xs px-3.5 py-1 bg-emerald-700 hover:bg-emerald-800 border-emerald-800"
+              >
+                Finish Tour ✓
+              </button>
+            )}
           </div>
         </div>
       </div>
     </div>
   );
 }
+

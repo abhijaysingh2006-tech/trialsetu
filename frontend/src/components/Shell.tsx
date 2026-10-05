@@ -150,7 +150,17 @@ function Frame({ children }: { children: ReactNode }) {
             <div className="truncate text-sm font-medium text-slate-800">{me?.name} · <span className="text-slate-500">{me?.title}</span></div>
           </div>
 
-          <button onClick={() => { setTour(0); }} className="btn-haldi" title="Guided 3-minute demo"><PlayCircle size={15} /> {t('demoTour')}</button>
+          <button
+            onClick={() => {
+              useStore.getState().setRole('leadership');
+              useStore.getState().setTour(0);
+              router.push('/');
+            }}
+            className="btn-haldi"
+            title="Guided 3-minute demo"
+          >
+            <PlayCircle size={15} /> {t('demoTour')}
+          </button>
 
           <label className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-xs" title={t('switchRole')}>
             <span className="text-slate-500">{t('role')}:</span>

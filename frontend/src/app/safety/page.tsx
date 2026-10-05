@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Siren,
   Plus,
@@ -37,6 +37,12 @@ export default function SafetyPage() {
   const [tab, setTab] = useState<'clocks' | 'all-aes' | 'saes'>('clocks');
   const [filterQuery, setFilterQuery] = useState('');
   const [openModal, setOpenModal] = useState(false);
+
+  useEffect(() => {
+    if (focusId) {
+      setTab('clocks');
+    }
+  }, [focusId]);
 
   // Separate SAE clocks from others
   const saeClocks = useMemo(
@@ -148,8 +154,8 @@ export default function SafetyPage() {
       {tab === 'clocks' && (
         <div className="space-y-4">
           <div className="grid gap-4 md:grid-cols-2">
-            {saeClocks.map((clock) => {
-              const isFocused = focusId === clock.entityId;
+            {saeClocks.map((clock, idx) => {
+              const isFocused = focusId ? focusId === clock.entityId : idx === 0;
               return (
                 <SaeClockCard
                   key={clock.key}

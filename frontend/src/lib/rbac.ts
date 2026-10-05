@@ -40,7 +40,7 @@ export const ROLES: Record<RoleId, RoleDef> = {
   leadership: {
     id: 'leadership', label: 'Leadership / Regulator', labelHi: 'नेतृत्व / नियामक', short: 'LDR', color: 'bg-brand-700',
     permissions: ['export'],
-    routes: ['/', '/studies', '/safety', '/batches', '/ethics', '/ai', '/rules', '/consent', '/audit', '/interop', '/scorecard', '/about'],
+    routes: ['/', '/studies', '/safety', '/batches', '/coding', '/capture', '/ethics', '/ai', '/rules', '/consent', '/audit', '/interop', '/scorecard', '/about'],
     readOnly: true,
   },
 };

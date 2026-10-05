@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Share2,
   FileCode,
@@ -60,6 +60,17 @@ export default function InteropPage() {
   const [tab, setTab] = useState<'fhir' | 'sdtm' | 'packets'>(initialTab);
   const [selectedStudyId, setSelectedStudyId] = useState(studyParam ?? studies[0]?.id ?? 'T10');
   const [selectedResource, setSelectedResource] = useState<FhirResource | null>(null);
+
+  useEffect(() => {
+    const t = searchParams.get('tab') as 'fhir' | 'sdtm' | 'packets';
+    if (t && (t === 'fhir' || t === 'sdtm' || t === 'packets')) {
+      setTab(t);
+    }
+    const s = searchParams.get('study');
+    if (s) {
+      setSelectedStudyId(s);
+    }
+  }, [searchParams]);
 
   // FHIR Resources Collection
   const fhirResources = useMemo(() => {
@@ -346,7 +357,7 @@ export default function InteropPage() {
 
       {/* Tab 3: CTRI & EC Regulatory Packets */}
       {tab === 'packets' && (
-        <div className="grid gap-6 md:grid-cols-2">
+        <div id="tour-packet" className="grid gap-6 md:grid-cols-2">
           {/* CTRI Dossier */}
           <Card
             title="Clinical Trials Registry - India (CTRI) Packet"
